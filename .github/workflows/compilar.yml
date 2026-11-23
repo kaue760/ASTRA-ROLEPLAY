@@ -18,7 +18,7 @@ jobs:
       - name: Descompactar
         run: |
           mkdir build
-          unzip -q ./*.zip -d build
+          unzip -q ASTRA_ROLEPLAY_v0.2_LEVE.zip -d build
 
       - name: Instalar compilador
         run: |
