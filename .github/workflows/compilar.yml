@@ -1,0 +1,49 @@
+name: Compilar ASTRA
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '*.zip'
+
+permissions:
+  contents: write
+
+jobs:
+  compilar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Descompactar
+        run: |
+          mkdir build
+          unzip -q ./*.zip -d build
+
+      - name: Instalar compilador
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libc6:i386 libstdc++6:i386
+          wget -q https://github.com/pawn-lang/compiler/releases/download/v3.10.10/pawnc-3.10.10-linux.tar.gz
+          tar xzf pawnc-3.10.10-linux.tar.gz
+
+      - name: Compilar
+        run: |
+          set +e
+          PAWN=$(pwd)/pawnc-3.10.10-linux
+          export LD_LIBRARY_PATH=$PAWN/lib
+          cd build/gamemodes
+          $PAWN/bin/pawncc ASTRA.pwn -i../include -i../plugins -i. > ../../compile_log.txt 2>&1
+          exit 0
+
+      - name: Salvar resultado
+        run: |
+          mkdir -p compilado
+          cp build/gamemodes/ASTRA.amx compilado/ || true
+          cp compile_log.txt compilado/
+          git config user.name "actions"
+          git config user.email "actions@github.com"
+          git add compilado
+          git commit -m "Resultado da compilacao" || true
+          git push
